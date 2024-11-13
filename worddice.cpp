@@ -25,7 +25,7 @@ class Node {
         bool visited;
         vector <Edge*> adj;
         Edge *backedge;
-        bool match;
+        bool match; // if node has matched a letter
 };
 
 class Graph {
@@ -95,9 +95,9 @@ int main(int argc, char** argv) {
         n->adj.push_back(edgeR);
     }
 
-    while (getline(cur_word, word_file)) {
+    while (getline(word_file, cur_word)) {
 
-        for (int i = 0; i < word.size(); i++) {
+        for (int i = 0; i < cur_word.size(); i++) {
             Node* n = new Node;
             n->type = WORD;
             n->backedge = NULL;
@@ -113,20 +113,48 @@ int main(int argc, char** argv) {
             edgeR->from = graph->sink;
             edge->remove = 1;
             edgeR->remove = 1;
-            edge->flow = 1;
-            edgeR->capacity = 0;
+            edge->residual = 1;
+            edgeR->original = 0;
             edge->reverse = edgeR;
             edgeR->reverse = edge;
 
-            n->adj.push_back(e);
-            graph->sink->adj.push_back(er);
+            n->adj.push_back(edge);
+            graph->sink->adj.push_back(edgeR);
             graph->nodes.push_back(n);
+
+            for (int i = 0; i < graph->source->adj.size(); i++) {
+                string temp = graph->source->adj[i]->to->word;
+                string temp2 = n->word;
+
+                for (int j = 0; j < temp.size(); j++){
+                    if (temp[j] == temp2[0]){
+                        // add edge to and from dice
+                        Edge *edge2 = new Edge;
+                        Edge *edge2R = new Edge;
+
+                        edge2->to = n;
+                        edge2R->to = graph->source->adj[i]->to;
+                        edge2->from = graph->source->adj[i]->to;
+                        edge2R->from = n;
+                        edge2R->residual = 1;
+                        edge2R->original = 0;
+                        edge2->remove = 1;
+                        edge2R->remove = 1;
+                        edge2->reverse = edge2R;
+                        edge2R->reverse = edge2;
+
+                        graph->source->adj[i]->to->adj.push_back(edge2);
+                        n->adj.push_back(edge2R);
+                    }
+                }
+            }
         }
 
         // ********* TO_DO ************//
         // do pathfinding with CanISpell(), which calls BFS over and over again until no path is found.
         // Crumpton video number three is very useful
-
+        
+        graph->DeleteHalfGraph();
 
     }
 
